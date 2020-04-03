@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-test-pod
+spec:
+  containers:
+    - name: test-container
+      image: busybox
+      # command: [ "/bin/sh", "-c", "cat /etc/config/" ]
+      # command: [ "/bin/sh", "-c", "ls -al /etc/config/" ]
+      command: [ "sleep", "3600" ]
+      volumeMounts:
+      - name: msp-volume
+        mountPath: /etc/fabric
+      - name: dir-volume
+        mountPath: /etc/config/
+      - name: one-file-volume
+        mountPath: /etc/config/file/borrar.json
+        subPath: borrar.json
+
+  #https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+  initContainers:
+    - name: init-myservice
+      image: busybox
+      command: ['/bin/sh', '-c', "tar -xzvf /etc/config/msp.tar.gz -C /etc/fabric/"]
+      volumeMounts:
+      - name: msp-volume
+        mountPath: /etc/fabric
+      - name: dir-volume
+        mountPath: /etc/config/
+
+  volumes:
+    - name: msp-volume
+      emptyDir: {}
+    - name: dir-volume
+      configMap:
+        name: dir-config
+    - name: one-file-volume
+      configMap:
+        name: one-file-config
+  restartPolicy: Never
